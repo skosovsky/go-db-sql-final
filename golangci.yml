@@ -229,7 +229,7 @@ linters-settings:
       - r *http.Request
       - ch chan
       - wg sync.WaitGroup
-      - m sync.Mutex      
+      - m sync.Mutex
 
 linters:
   disable-all: true

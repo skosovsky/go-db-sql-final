@@ -1,4 +1,4 @@
-package service_test
+package store_test
 
 import (
 	"database/sql"
@@ -27,7 +27,7 @@ func getTestParcel() model.Parcel {
 
 // TestAddGetDelete проверяет добавление, получение и удаление посылки.
 func TestAddGetDelete(t *testing.T) {
-	db, err := store.NewParcelStore()
+	db, err := store.NewParcelStore("../../data/tracker.db")
 	if err != nil {
 		log.Println(err)
 		return
@@ -43,9 +43,8 @@ func TestAddGetDelete(t *testing.T) {
 	parcel := getTestParcel()
 
 	parcel.ID, err = db.Add(parcel)
-	require.True(t,
-		assert.NoError(t, err),
-		assert.NotEmpty(t, parcel.ID))
+	require.NoError(t, err)
+	require.NotEmpty(t, parcel.ID)
 
 	parcelDataVerification, err := db.Get(parcel.ID)
 	require.NoError(t, err)
@@ -60,12 +59,12 @@ func TestAddGetDelete(t *testing.T) {
 
 	expectedErr := sql.ErrNoRows.Error()
 	actualErr := err
-	assert.ErrorContains(t, actualErr, expectedErr)
+	require.ErrorContains(t, actualErr, expectedErr)
 }
 
 // TestSetAddress проверяет обновление адреса.
 func TestSetAddress(t *testing.T) {
-	db, err := store.NewParcelStore()
+	db, err := store.NewParcelStore("../../data/tracker.db")
 	if err != nil {
 		log.Println(err)
 		return
@@ -81,9 +80,8 @@ func TestSetAddress(t *testing.T) {
 	parcel := getTestParcel()
 
 	parcel.ID, err = db.Add(parcel)
-	require.True(t,
-		assert.NoError(t, err),
-		assert.NotEmpty(t, parcel.ID))
+	require.NoError(t, err)
+	require.NotEmpty(t, parcel.ID)
 
 	newAddress := "new test address"
 	err = db.SetAddress(parcel.ID, newAddress)
@@ -100,7 +98,7 @@ func TestSetAddress(t *testing.T) {
 
 // TestSetStatus проверяет обновление статуса.
 func TestSetStatus(t *testing.T) {
-	db, err := store.NewParcelStore()
+	db, err := store.NewParcelStore("../../data/tracker.db")
 	if err != nil {
 		log.Println(err)
 		return
@@ -116,9 +114,8 @@ func TestSetStatus(t *testing.T) {
 	parcel := getTestParcel()
 
 	parcel.ID, err = db.Add(parcel)
-	require.True(t,
-		assert.NoError(t, err),
-		assert.NotEmpty(t, parcel.ID))
+	require.NoError(t, err)
+	require.NotEmpty(t, parcel.ID)
 
 	err = db.SetStatus(parcel.ID, model.ParcelStatusSent)
 	require.NoError(t, err)
@@ -139,7 +136,7 @@ func TestGetByClient(t *testing.T) {
 		randRange  = rand.New(randSource)
 	)
 
-	db, err := store.NewParcelStore()
+	db, err := store.NewParcelStore("../../data/tracker.db")
 	if err != nil {
 		log.Println(err)
 		return
@@ -169,9 +166,8 @@ func TestGetByClient(t *testing.T) {
 		id, err = db.Add(parcels[idx])
 		parcels[idx].ID = id
 
-		require.True(t,
-			assert.NoError(t, err),
-			assert.NotEmpty(t, parcels[idx].ID))
+		require.NoError(t, err)
+		require.NotEmpty(t, parcels[idx].ID)
 
 		parcels[idx].ID = id
 
