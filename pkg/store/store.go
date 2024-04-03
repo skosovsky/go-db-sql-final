@@ -16,18 +16,27 @@ func NewParcelStore(pathFile string) (ParcelStore, error) {
 	db, err := sql.Open("sqlite", pathFile)
 	if err != nil {
 		err = fmt.Errorf("db open error: %w", err)
+
 		return ParcelStore{nil}, err
 	}
 
 	return ParcelStore{db}, nil
 }
 
-func (s ParcelStore) Add(p model.Parcel) (int, error) {
-	res, err := s.Exec("INSERT INTO parcel (client_id, status, address, created_at) VALUES (:client_id, :status, :address, :created_at)",
-		sql.Named("client_id", p.ClientID),
-		sql.Named("status", p.Status),
-		sql.Named("address", p.Address),
-		sql.Named("created_at", p.CreatedAt))
+func (p ParcelStore) CloseStore() {
+	err := p.Close()
+	if err != nil {
+		log.Println("db close error")
+		return
+	}
+}
+
+func (p ParcelStore) Add(parcel model.Parcel) (int, error) {
+	res, err := p.Exec("INSERT INTO parcel (client_id, status, address, created_at) VALUES (:client_id, :status, :address, :created_at)",
+		sql.Named("client_id", parcel.ClientID),
+		sql.Named("status", parcel.Status),
+		sql.Named("address", parcel.Address),
+		sql.Named("created_at", parcel.CreatedAt))
 	if err != nil {
 		err = fmt.Errorf("db exec error: %w", err)
 		return 0, err
@@ -42,10 +51,10 @@ func (s ParcelStore) Add(p model.Parcel) (int, error) {
 	return int(id), nil
 }
 
-func (s ParcelStore) Get(id int) (model.Parcel, error) {
+func (p ParcelStore) Get(id int) (model.Parcel, error) {
 	var parcel model.Parcel
 
-	row := s.QueryRow("SELECT id, client_id, status, address, created_at FROM parcel WHERE id = :id",
+	row := p.QueryRow("SELECT id, client_id, status, address, created_at FROM parcel WHERE id = :id",
 		sql.Named("id", id))
 
 	err := row.Scan(&parcel.ID, &parcel.ClientID, &parcel.Status, &parcel.Address, &parcel.CreatedAt)
@@ -57,8 +66,8 @@ func (s ParcelStore) Get(id int) (model.Parcel, error) {
 	return parcel, nil
 }
 
-func (s ParcelStore) GetByClient(clientID int) ([]model.Parcel, error) {
-	rows, err := s.Query("SELECT id, client_id,status,address,created_at FROM parcel WHERE client_id = :client_id", //nolint:sqlclosecheck // it's strange, because row is closed
+func (p ParcelStore) GetByClient(clientID int) ([]model.Parcel, error) {
+	rows, err := p.Query("SELECT id, client_id,status,address,created_at FROM parcel WHERE client_id = :client_id", //nolint:sqlclosecheck // it's strange, because row is closed
 		sql.Named("client_id", clientID))
 	if err != nil {
 		err = fmt.Errorf("db query error: %w", err)
@@ -94,8 +103,8 @@ func (s ParcelStore) GetByClient(clientID int) ([]model.Parcel, error) {
 	return parcels, nil
 }
 
-func (s ParcelStore) SetStatus(id int, status model.ParcelStatus) error {
-	_, err := s.Exec("UPDATE parcel SET status = :status WHERE id = :id",
+func (p ParcelStore) SetStatus(id int, status model.ParcelStatus) error {
+	_, err := p.Exec("UPDATE parcel SET status = :status WHERE id = :id",
 		sql.Named("id", id),
 		sql.Named("status", status))
 	if err != nil {
@@ -106,9 +115,10 @@ func (s ParcelStore) SetStatus(id int, status model.ParcelStatus) error {
 	return nil
 }
 
-func (s ParcelStore) SetAddress(id int, address string) error {
-	_, err := s.Exec("UPDATE parcel SET address = :address WHERE id = :id",
+func (p ParcelStore) SetAddress(id int, address string) error {
+	_, err := p.Exec("UPDATE parcel SET address = :address WHERE id = :id AND status == :status",
 		sql.Named("id", id),
+		sql.Named("status", model.ParcelStatusRegistered),
 		sql.Named("address", address))
 	if err != nil {
 		err = fmt.Errorf("db exec error: %w", err)
@@ -118,8 +128,8 @@ func (s ParcelStore) SetAddress(id int, address string) error {
 	return nil
 }
 
-func (s ParcelStore) Delete(id int) error {
-	_, err := s.Exec("DELETE FROM parcel WHERE id = :id AND status == :status",
+func (p ParcelStore) Delete(id int) error {
+	_, err := p.Exec("DELETE FROM parcel WHERE id = :id AND status == :status",
 		sql.Named("id", id),
 		sql.Named("status", model.ParcelStatusRegistered))
 	if err != nil {

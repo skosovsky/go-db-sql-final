@@ -12,16 +12,10 @@ func main() {
 	// Подключение к БД
 	db, err := store.NewParcelStore("data/tracker.db")
 	if err != nil {
-		log.Println(err)
+		log.Fatalln(err)
 		return
 	}
-
-	defer func(store *store.ParcelStore) {
-		err = store.Close()
-		if err != nil {
-			log.Println("db close error")
-		}
-	}(&db)
+	defer db.CloseStore()
 
 	app := service.NewParcelService(db)
 
@@ -30,7 +24,7 @@ func main() {
 	address := "Псков, д. Пушкина, ул. Колотушкина, д. 5"
 	parcel, err := app.Register(client, address)
 	if err != nil {
-		log.Println(err)
+		log.Panicln(err)
 		return
 	}
 

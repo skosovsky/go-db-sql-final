@@ -27,8 +27,7 @@ func (s ParcelService) Register(client int, address string) (model.Parcel, error
 
 	id, err := s.store.Add(parcel)
 	if err != nil {
-		err = fmt.Errorf("add parcel error: %w", err)
-		return parcel, err
+		return model.Parcel{}, fmt.Errorf("add parcel error: %w", err)
 	}
 
 	parcel.ID = id
@@ -42,8 +41,7 @@ func (s ParcelService) Register(client int, address string) (model.Parcel, error
 func (s ParcelService) PrintClientParcels(client int) error {
 	parcels, err := s.store.GetByClient(client)
 	if err != nil {
-		err = fmt.Errorf("get by client error: %w", err)
-		return err
+		return fmt.Errorf("get by client error: %w", err)
 	}
 
 	fmt.Printf("Посылки клиента №%d:\n", client) //nolint:forbidigo // it's text app
@@ -59,8 +57,7 @@ func (s ParcelService) PrintClientParcels(client int) error {
 func (s ParcelService) NextStatus(number int) error {
 	parcel, err := s.store.Get(number)
 	if err != nil {
-		err = fmt.Errorf("get parcel error: %w", err)
-		return err
+		return fmt.Errorf("get parcel error: %w", err)
 	}
 
 	var nextStatus model.ParcelStatus
@@ -76,26 +73,26 @@ func (s ParcelService) NextStatus(number int) error {
 	fmt.Printf("У посылки №%d новый статус: %s\n", number, nextStatus) //nolint:forbidigo // it's text app
 	err = s.store.SetStatus(number, nextStatus)
 	if err != nil {
-		err = fmt.Errorf("set status error: %w", err)
+		return fmt.Errorf("set status error: %w", err)
 	}
 
-	return err
+	return nil
 }
 
 func (s ParcelService) ChangeAddress(number int, address string) error {
 	err := s.store.SetAddress(number, address)
 	if err != nil {
-		err = fmt.Errorf("change address error: %w", err)
+		return fmt.Errorf("change address error: %w", err)
 	}
 
-	return err
+	return nil
 }
 
 func (s ParcelService) Delete(number int) error {
 	err := s.store.Delete(number)
 	if err != nil {
-		err = fmt.Errorf("delete parcel error: %w", err)
+		return fmt.Errorf("delete parcel error: %w", err)
 	}
 
-	return err
+	return nil
 }

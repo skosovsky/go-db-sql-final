@@ -2,7 +2,6 @@ package store_test
 
 import (
 	"database/sql"
-	"log"
 	"math/rand"
 	"testing"
 	"time"
@@ -28,17 +27,8 @@ func getTestParcel() model.Parcel {
 // TestAddGetDelete проверяет добавление, получение и удаление посылки.
 func TestAddGetDelete(t *testing.T) {
 	db, err := store.NewParcelStore("../../data/tracker.db")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	defer func(db *store.ParcelStore) {
-		err = db.Close()
-		if err != nil {
-			log.Println("db close error")
-		}
-	}(&db)
+	require.NoError(t, err)
+	defer db.CloseStore()
 
 	parcel := getTestParcel()
 
@@ -49,14 +39,14 @@ func TestAddGetDelete(t *testing.T) {
 	parcelDataVerification, err := db.Get(parcel.ID)
 	require.NoError(t, err)
 
-	assert.EqualValues(t, parcelDataVerification, parcel)
+	expectedParcel := parcel
+	actualParcel := parcelDataVerification
+	assert.EqualValues(t, expectedParcel, actualParcel)
 
 	err = db.Delete(parcel.ID)
 	require.NoError(t, err)
 
 	_, err = db.Get(parcel.ID)
-	require.Error(t, err)
-
 	expectedErr := sql.ErrNoRows.Error()
 	actualErr := err
 	require.ErrorContains(t, actualErr, expectedErr)
@@ -65,17 +55,8 @@ func TestAddGetDelete(t *testing.T) {
 // TestSetAddress проверяет обновление адреса.
 func TestSetAddress(t *testing.T) {
 	db, err := store.NewParcelStore("../../data/tracker.db")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	defer func(db *store.ParcelStore) {
-		err = db.Close()
-		if err != nil {
-			log.Println("db close error")
-		}
-	}(&db)
+	require.NoError(t, err)
+	defer db.CloseStore()
 
 	parcel := getTestParcel()
 
@@ -99,17 +80,8 @@ func TestSetAddress(t *testing.T) {
 // TestSetStatus проверяет обновление статуса.
 func TestSetStatus(t *testing.T) {
 	db, err := store.NewParcelStore("../../data/tracker.db")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	defer func(db *store.ParcelStore) {
-		err = db.Close()
-		if err != nil {
-			log.Println("db close error")
-		}
-	}(&db)
+	require.NoError(t, err)
+	defer db.CloseStore()
 
 	parcel := getTestParcel()
 
@@ -137,17 +109,8 @@ func TestGetByClient(t *testing.T) {
 	)
 
 	db, err := store.NewParcelStore("../../data/tracker.db")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	defer func(db *store.ParcelStore) {
-		err = db.Close()
-		if err != nil {
-			log.Println("db close error")
-		}
-	}(&db)
+	require.NoError(t, err)
+	defer db.CloseStore()
 
 	parcels := []model.Parcel{
 		getTestParcel(),
